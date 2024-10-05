@@ -9,62 +9,83 @@ function Three() {
     let planete = [
         {
             name: "Mercury",
-            xval: -101,
-            yval: -89,
-            radius: 0.38,
-            speed: 4,
-            texture: 'images/mercury.jpg',
+            o1: 18.146182,
+            o2: 37.88255249741469,
+            o3: -59.273504,
+            o4: -37.88255249741469,
+            rot: 0.12227068694301324,
+            radius: 100,
+            texture: "images/mercury.jpg",
         },
         {
             name: "Venus",
-            xval: 855,
-            yval: 982,
-            radius: 0.95,
-            speed: 2,
-            texture: 'images/venus.jpg',
+            o1: 71.655894,
+            o2: 72.33190505997658,
+            o3: -73.011238,
+            o4: -72.33190505997658,
+            rot: 0.05924827411109566,
+            radius: 100,
+            texture: "images/venus.jpg",
         },
         {
             name: "Earth",
-            xval: -974,
-            yval: -1174,
-            radius: 1,
-            speed: 1.6,
-            texture: 'images/earth.jpg',
-        }, {
+            o1: 98.329138,
+            o2: 99.98629672814833,
+            o3: -101.671384,
+            o4: -99.98629672814833,
+            rot: -2.6720990848033185e-07,
+            radius: 100,
+            texture: "images/earth.jpg",
+        },
+        {
             name: "Mars",
-            xval: -1013,
-            yval: 507,
-            radius: 0.53,
-            speed: 1.3,
-            texture: 'images/mars.jpg',
-        }, {
+            o1: 143.031624,
+            o2: 151.70505360708557,
+            o3: -161.710444,
+            o4: -151.70505360708557,
+            rot: 0.03228320542488929,
+            radius: 100,
+            texture: "images/mars.jpg",
+        },
+        {
             name: "Jupiter",
-            xval: -3425,
-            yval: -6643,
-            radius: 6,
-            speed: 0.5,
-            texture: 'images/jupiter.jpg',
-        }, {
+            o1: 515.450076,
+            o2: 519.6792858027086,
+            o3: -525.1273239999999,
+            o4: -519.6792858027086,
+            rot: 0.02276602153047185,
+            radius: 100,
+            texture: "images/jupiter.jpg",
+        },
+        {
             name: "Saturn",
-            xval: 12194,
-            yval: 12705,
-            radius: 5,
-            speed: 0.3,
-            texture: 'images/saturn.jpg',
-        }, {
+            o1: 948.2814150000002,
+            o2: 952.2832503284822,
+            o3: -959.053773,
+            o4: -952.2832503284822,
+            rot: 0.04338874330931084,
+            radius: 100,
+            texture: "images/saturn.jpg",
+        },
+        {
             name: "Uranus",
-            xval: 20153,
-            yval: 15449,
-            radius: 4,
-            speed: 0.2,
-            texture: 'images/uranus.jpg'
-        }, {
+            o1: 1914.1907200000003,
+            o2: 1916.7725412456193,
+            o3: -1923.642208,
+            o4: -1916.7725412456193,
+            rot: 0.013485074058964219,
+            radius: 100,
+            texture: "images/uranus.jpg",
+        },
+        {
             name: "Neptune",
-            xval: 10109,
-            yval: -18852,
-            radius: 3.88,
-            speed: 0.1,
-            texture: 'images/neptune.jpg',
+            o1: 3006.133228,
+            o2: 3006.8813214307947,
+            o3: -3007.8513239999997,
+            o4: -3006.8813214307947,
+            rot: 0.030893086454925476,
+            radius: 100,
+            texture: "images/neptune.jpg",
         },
     ]
 
@@ -107,8 +128,12 @@ function Three() {
                 return planet;
             }
 
-            function createOrbit(radius1, radius2, segments = 64) {
-                const curve = new THREE.EllipseCurve(0, 0, radius1, radius2, 0, 2 * Math.PI, false, 0);
+            function createOrbit(o1, o2, o3, o4, rot, segments = 128) {
+                const r1 = Math.abs(o3 - o1); // razele elipsei
+                const r2 = Math.abs(o4 - o2) * 0.95;
+                const x = (o4 + o2) / 2; // decalajul fata de soare al orbitei
+                const y = (o3 + o1) / 2;
+                const curve = new THREE.EllipseCurve(x, y, r1, r2, 0, 2 * Math.PI, false, -rot);
                 const points = curve.getPoints(segments);
                 const orbitGeometry = new THREE.BufferGeometry().setFromPoints(points);
                 const orbitMaterial = new THREE.LineBasicMaterial({ color: 0xffffff });
@@ -121,7 +146,7 @@ function Three() {
             planete.forEach((planeta, index) => {
                 planete[index].texture = texture.load(planeta.texture); // Conversie string in textura
                 objplanete.push(createPlanet(planeta.radius, planeta.texture, Math.abs(planeta.xval), Math.abs(planeta.yval)))
-                scene.add(createOrbit(planeta.xval, planeta.yval))
+                scene.add(createOrbit(planeta.o1, planeta.o2, planeta.o3, planeta.o4, planeta.rot))
             })
 
             function createStars() {
