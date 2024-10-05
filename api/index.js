@@ -1,3 +1,4 @@
+const { tab } = require('@testing-library/user-event/dist/tab');
 const express = require('express')
 const app = express()
 const https = require('https');
@@ -13,8 +14,16 @@ function genereaza_query(comanda, data)
     return `${api_gateway}&COMMAND='${comanda}'&STEP_SIZE='3600'&START_TIME='${ora_start}'&STOP_TIME='${ora_end}'&QUANTITIES='6'&CENTER='geo@0'`;
 }
 
-app.get('/', (req, res) => {
-    query = genereaza_query(1, new Date())
+function ia_intre(text, marker_start, marker_end)
+{
+    const startIndex = text.indexOf(marker_start);
+    const endIndex = text.indexOf(marker_end, startIndex + marker_start.length);
+    return text.substring(startIndex + marker_start.length, endIndex);
+}
+
+app.get('/*', (req, res) => {
+    command = req.originalUrl.substring(1, 100000);
+    query = genereaza_query(command, new Date())
 
     https.get(query, result => {
         let data = [];
@@ -30,13 +39,16 @@ app.get('/', (req, res) => {
 
             // ia raspunsul raw
             text = Buffer.concat(data).toString();
+            console.log(text)
+
+            // preia raza
+            raza = ia_intre(text, "Radius (km) = ", "    ");
+            raza = raza.replace(/\s/g, "").replace("+", "").replace("-", ""); // sterge +- si spatiul liber
+            raza = raza.replace(/.([^.]*)$/, '$1'); // sterge ultimul punct (uneori e fantoma la +-<toleranta>)
+            console.log(raza)
 
             // preia tabelul
-            marker_start = "$$SOE";
-            marker_end = "$$EOE";
-            const startIndex = text.indexOf(marker_start);
-            const endIndex = text.indexOf(marker_end, startIndex + marker_start.length);
-            tabel = text.substring(startIndex + marker_start.length, endIndex);
+            tabel = ia_intre(text, "$$SOE", "$$EOE");
 
             // imparte tabelul in pozitii
             tabel = tabel.split(" ");
@@ -50,7 +62,19 @@ app.get('/', (req, res) => {
             // sterge orele exacte (tot al 4-lea element)
             tabel = tabel.filter(function(data, index){ return (index%4 !== 0); })
 
-            res.send(tabel)
+            // genereaza json
+            var json = [];
+            json.push({radius: raza});
+            
+            for(var i = 0; i < tabel.length; i += 3)
+            {
+                json.push({
+                    x: `${tabel[i]}`,
+                    y: `${tabel[i + 1]}`,
+                    inc: `${tabel[i + 2].slice(0, -1)}`
+                });
+            }
+            res.send(json)
         });
       }).on('error', err => {
         res.send("eroare")
