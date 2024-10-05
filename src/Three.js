@@ -71,7 +71,7 @@ function Three() {
     useEffect(() => {
         if (!rendererRef.current) {
             const scene = new THREE.Scene();
-            const camera = new THREE.PerspectiveCamera(60, window.innerWidth / window.innerHeight, 0.1, 500000);
+            const camera = new THREE.PerspectiveCamera(60, window.innerWidth / window.innerHeight, 0.0000000001, 500000000000);
             const renderer = new THREE.WebGLRenderer();
             renderer.setSize(window.innerWidth, window.innerHeight, false);
             refContainer.current && refContainer.current.appendChild(renderer.domElement);
@@ -120,7 +120,7 @@ function Three() {
             let objplanete = [];
             planete.forEach((planeta, index) => {
                 planete[index].texture = texture.load(planeta.texture); // Conversie string in textura
-                objplanete.push(createPlanet(planeta.radius, planeta.texture, planeta.xval, planeta.yval))
+                objplanete.push(createPlanet(planeta.radius, planeta.texture, Math.abs(planeta.xval), Math.abs(planeta.yval)))
                 scene.add(createOrbit(planeta.xval, planeta.yval))
             })
 
@@ -128,10 +128,10 @@ function Three() {
                 const starGeometry = new THREE.BufferGeometry();
                 const starMaterial = new THREE.PointsMaterial({ color: 0xffffff });
                 const starVertices = [];
-                for (let i = 0; i < 10000; ++i) {
-                    const x = (Math.random() - 0.5) * 2000;
-                    const y = (Math.random() - 0.5) * 2000;
-                    const z = (Math.random() - 0.5) * 2000;
+                for (let i = 0; i < 10000; i++) {
+                    const x = (Math.random() - 0.5) * 20000000;
+                    const y = (Math.random() - 0.5) * 20000000;
+                    const z = (Math.random() - 0.5) * 20000000;
                     starVertices.push(x, y, z);
                 }
                 starGeometry.setAttribute('position', new THREE.Float32BufferAttribute(starVertices, 3));
