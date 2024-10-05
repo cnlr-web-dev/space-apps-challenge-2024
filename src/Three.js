@@ -71,7 +71,7 @@ function Three() {
     useEffect(() => {
         if (!rendererRef.current) {
             const scene = new THREE.Scene();
-            const camera = new THREE.PerspectiveCamera(60, window.innerWidth / window.innerHeight, 0.1, 1000);
+            const camera = new THREE.PerspectiveCamera(60, window.innerWidth / window.innerHeight, 0.1, 500000);
             const renderer = new THREE.WebGLRenderer();
             renderer.setSize(window.innerWidth, window.innerHeight, false);
             refContainer.current && refContainer.current.appendChild(renderer.domElement);
@@ -106,6 +106,7 @@ function Three() {
                 scene.add(planet);
                 return planet;
             }
+
             function createOrbit(radius1, radius2, segments = 64) {
                 const curve = new THREE.EllipseCurve(0, 0, radius1, radius2, 0, 2 * Math.PI, false, 0);
                 const points = curve.getPoints(segments);
@@ -118,7 +119,7 @@ function Three() {
 
             let objplanete = [];
             planete.forEach((planeta, index) => {
-                planeta[index].texture = texture.load(planeta.texture); // Conversie string in textura
+                planete[index].texture = texture.load(planeta.texture); // Conversie string in textura
                 objplanete.push(createPlanet(planeta.radius, planeta.texture, planeta.xval, planeta.yval))
                 scene.add(createOrbit(planeta.xval, planeta.yval))
             })
