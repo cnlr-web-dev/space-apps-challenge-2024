@@ -118,13 +118,17 @@ function Three() {
     let objplanete = [];
 
     async function update_json_api() {
-        const api_gateway = "http://89.137.132.40:3000/";
-        const response = await fetch(api_gateway);
-        const json = await response.json();
-
-        for (var index = 0; index < planete.length; index++) {
-            planete[index].api_json = json[index];
-            planete[index].radius = planete[index].api_json[0].radius * 15;
+        try{
+            const api_gateway = "http://89.137.132.40:3000/";
+            const response = await fetch(api_gateway);
+            const json = await response.json();
+    
+            for (var index = 0; index < planete.length; index++) {
+                planete[index].api_json = json[index];
+                planete[index].radius = planete[index].api_json[0].radius * 15;
+            }
+        } catch(e){
+            planete[0] = undefined;
         }
     }
 
@@ -137,6 +141,12 @@ function Three() {
     useEffect(() => {
         setInterval(() => console.log(camera.position), 1000);
         update_json_api().then(() => {
+            if(planete[0] == undefined)
+            {
+                alert("Internal server error. Reloading.");
+                window.location.reload();
+            }
+
             if (!rendererRef.current) {
                 const scene = new THREE.Scene();
                 const renderer = new THREE.WebGLRenderer({ antialias: true });
