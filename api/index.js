@@ -123,8 +123,6 @@ app.get('/', async (req, res) => {
         for (let i = 1; i <= 8; i++) {
             const data = await descarca_json(i);
             json_final.push(data);
-
-            await delay(1500);
         }
 
         res.send(json_final);
