@@ -1,10 +1,12 @@
-const { tab } = require('@testing-library/user-event/dist/tab');
+var cors = require('cors')
 const express = require('express')
 const app = express()
 const https = require('https');
 const port = 3000
 
 // https://ssd.jpl.nasa.gov/api/horizons.api?format=text&COMMAND='1'&STEP_SIZE='3600'&START_TIME='2015-09-25 10:00'&STOP_TIME='2015-09-25 11:00'&QUANTITIES='6'&CENTER='geo@0'
+
+app.use(cors());
 
 const api_gateway = "https://ssd.jpl.nasa.gov/api/horizons.api?format=text";
 function genereaza_query(comanda, data)
@@ -39,14 +41,21 @@ app.get('/*', (req, res) => {
 
             // ia raspunsul raw
             text = Buffer.concat(data).toString();
-            console.log(text)
 
             // preia raza
-            raza = ia_intre(text, "Radius (km) = ", "    ");
-            raza = raza.replace(/\s/g, "").replace("+", "").replace("-", ""); // sterge +- si spatiul liber
-            raza = raza.replace(/.([^.]*)$/, '$1'); // sterge ultimul punct (uneori e fantoma la +-<toleranta>)
-            console.log(raza)
-
+            const regex = /Vol. [Mm]ean [Rr]adius \(km\) *= *([\d\+-]+)/;
+            const match = text.match(regex);
+            if(match)
+            {
+                raza = match[0];
+                raza = raza.replace(/\s/g, "").replace("+", "").replace("-", ""); // sterge +- si spatiul liber
+                raza = raza.replace(/.([^.]*)$/, '$1'); // sterge ultimul punct (uneori e fantoma la +-<toleranta>)
+                raza = raza.substring(18, 100000);
+            }
+            else
+            {
+                raza = 1000;
+            }
             // preia tabelul
             tabel = ia_intre(text, "$$SOE", "$$EOE");
 
