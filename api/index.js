@@ -74,6 +74,10 @@ function incarca_cache(filePath) {
     return JSON.parse(fs.readFileSync(filePath, 'utf-8'));
 }
 
+function delay(ms) {
+    return new Promise(resolve => setTimeout(resolve, ms));
+}
+
 app.get('/', async (req, res) => {
     let data_curenta = new Date();
     console.log(`${req.ip} conectat`);
@@ -119,6 +123,8 @@ app.get('/', async (req, res) => {
         for (let i = 1; i <= 8; i++) {
             const data = await descarca_json(i);
             json_final.push(data);
+
+            await delay(1500);
         }
 
         res.send(json_final);
