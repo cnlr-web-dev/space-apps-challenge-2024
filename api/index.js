@@ -1,17 +1,24 @@
-var cors = require('cors')
-const express = require('express')
-const app = express()
+const cors = require('cors');
+const express = require('express');
 const https = require('https');
-const port = 3000
-
-// https://ssd.jpl.nasa.gov/api/horizons.api?format=text&COMMAND='1'&STEP_SIZE='3600'&START_TIME='2015-09-25 10:00'&STOP_TIME='2015-09-25 11:00'&QUANTITIES='6'&CENTER='geo@0'
+const fs = require('fs');
+const path = require('path');
+const app = express();
+const port = 3000;
 
 app.use(cors());
 
 const api_gateway = "https://ssd.jpl.nasa.gov/api/horizons.api?format=text";
+const cache_folder = './cache';
+
+// Creaza folderul de cache
+if (!fs.existsSync(cache_folder)) {
+    fs.mkdirSync(cache_folder);
+}
+
 function genereaza_query(comanda, data) {
-    ora_start = `${data.getFullYear()}-${data.getMonth() + 1}-${data.getDate()} ${data.getHours()}:00`
-    ora_end = `${data.getFullYear()}-${data.getMonth() + 1}-${data.getDate()} ${data.getHours() + 1}:00`
+    const ora_start = `${data.getFullYear()}-${data.getMonth() + 1}-${data.getDate()} ${data.getHours()}:00`;
+    const ora_end = `${data.getFullYear()}-${data.getMonth() + 1}-${data.getDate()} ${data.getHours() + 1}:00`;
     return `${api_gateway}&COMMAND='${comanda}'&STEP_SIZE='3600'&START_TIME='${ora_start}'&STOP_TIME='${ora_end}'&QUANTITIES='6'&CENTER='geo@0'`;
 }
 
@@ -21,53 +28,67 @@ function ia_intre(text, marker_start, marker_end) {
     return text.substring(startIndex + marker_start.length, endIndex);
 }
 
-function prelucreaza_raspuns(text)
-{
-    // preia raza
+function prelucreaza_raspuns(text) {
     const regex = /Vol\. [Mm]ean [Rr]adius \(km\) *= *([\d]+)(?=[.+-]|$)/;
     const match = text.match(regex);
     if (!match) {
         return [];
     }
-    raza = match[1];
+    const raza = match[1];
 
-    // preia tabelul
-    tabel = ia_intre(text, "$$SOE", "$$EOE");
+    let tabel = ia_intre(text, "$$SOE", "$$EOE");
+    tabel = tabel.split(" ").filter((element) => element.length > 1);
+    tabel = tabel.filter((data, index) => (index % 5 !== 0));
+    tabel = tabel.filter((data, index) => (index % 4 !== 0));
 
-    // imparte tabelul in pozitii
-    tabel = tabel.split(" ");
-
-    // sterge elementele nule
-    tabel = tabel.filter((element) => element.length > 1)
-
-    // sterge datele exacte (tot al 5-lea element)
-    tabel = tabel.filter(function (data, index) { return (index % 5 !== 0); })
-
-    // sterge orele exacte (tot al 4-lea element)
-    tabel = tabel.filter(function (data, index) { return (index % 4 !== 0); })
-
-    // genereaza json
-    var json = [];
-    json.push({ radius: raza });
-
-    for (var i = 0; i < tabel.length; i += 3) {
+    const json = [{ radius: raza }];
+    for (let i = 0; i < tabel.length; i += 3) {
         json.push({
             x: `${tabel[i]}`,
             y: `${tabel[i + 1]}`,
             inc: `${tabel[i + 2].slice(0, -1)}`
         });
     }
-
     return json;
+}
+
+function fa_nume_cache(command) {
+    return path.join(cache_folder, `${command}.json`);
+}
+
+function este_cache_valid(filePath) {
+    if (!fs.existsSync(filePath)) return false;
+
+    const stats = fs.statSync(filePath);
+    const timp_cache = new Date(stats.mtime);
+    const timp_curent = new Date();
+
+    return timp_cache.getHours() === timp_curent.getHours();
+}
+
+function scrie_cache(filePath, data) {
+    fs.writeFileSync(filePath, JSON.stringify(data), 'utf-8');
+}
+
+function incarca_cache(filePath) {
+    return JSON.parse(fs.readFileSync(filePath, 'utf-8'));
 }
 
 app.get('/', async (req, res) => {
     let data_curenta = new Date();
     console.log(`${req.ip} conectat`);
 
-    function descarca_json(i) {
+    async function descarca_json(i) {
+        const command = `${i}99`;
+        const cacheFilePath = fa_nume_cache(command);
+
+        // verifica cacheul
+        if (este_cache_valid(cacheFilePath)) {
+            console.log(`Cache: ${command} ${data_curenta}`);
+            return incarca_cache(cacheFilePath);
+        }
+
         return new Promise((resolve, reject) => {
-            const command = `${i}99`;
             const query = genereaza_query(command, data_curenta);
             
             https.get(query, (result) => {
@@ -81,6 +102,8 @@ app.get('/', async (req, res) => {
                     console.log(`Facem request la ${query}`);
                     const text = Buffer.concat(data).toString();
                     const processedData = prelucreaza_raspuns(text);
+
+                    scrie_cache(cacheFilePath, processedData);
                     resolve(processedData);
                 });
             }).on('error', err => {
@@ -93,13 +116,11 @@ app.get('/', async (req, res) => {
     try {
         const json_final = [];
 
-        // descarca jsonurile pentru fiecare planeta si pune-le intr-unul centralizat
         for (let i = 1; i <= 8; i++) {
             const data = await descarca_json(i);
             json_final.push(data);
         }
 
-        // intoarce rezultatul
         res.send(json_final);
     } catch (err) {
         console.log(`Avem o eroare taică: ${err}`);
@@ -108,5 +129,5 @@ app.get('/', async (req, res) => {
 });
 
 app.listen(port, () => {
-    console.log(`Example gfd listening on port ${port}`)
-})
+    console.log(`Server is listening on port ${port}`);
+});
