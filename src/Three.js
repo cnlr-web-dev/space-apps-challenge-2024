@@ -240,7 +240,7 @@ function Three() {
 
                 function animate() {
                     const date = new Date();
-                    const time = date.getSeconds() + date.getMinutes();
+                    const time = date.getSeconds() + date.getMinutes() * 60;
 
                     objplanete.forEach((planeta, index) => {
                         var planeta_obiect = planete[index];
