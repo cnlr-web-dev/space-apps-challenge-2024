@@ -259,6 +259,7 @@ function Three() {
                 function animate() {
                     const date = new Date();
                     const time = date.getSeconds() + date.getMinutes() * 60;
+                    time = time % 3600; // in caz ca....
 
                     objplanete.forEach((planeta, index) => {
                         var planeta_obiect = planete[index];
