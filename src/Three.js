@@ -130,7 +130,7 @@ function Three() {
             if (!rendererRef.current) {
                 const scene = new THREE.Scene();
                 const camera = new THREE.PerspectiveCamera(60, window.innerWidth / window.innerHeight, 0.0000000000001, 500000000000000);
-                const renderer = new THREE.WebGLRenderer();
+                const renderer = new THREE.WebGLRenderer({ antialias: true });
                 renderer.setSize(window.innerWidth, window.innerHeight, false);
                 refContainer.current && refContainer.current.appendChild(renderer.domElement);
 
