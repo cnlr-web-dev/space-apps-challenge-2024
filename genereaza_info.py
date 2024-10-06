@@ -15,7 +15,7 @@ def descarca(url):
 
 informatii = []
 
-for i in range(1,8):
+for i in range(1,9):
     informatii.append(descarca(f"https://ssd.jpl.nasa.gov/api/horizons.api?format=text&COMMAND='{i}99'"))
 
 informatiif = open("info.json", "w+")
