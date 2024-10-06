@@ -121,7 +121,7 @@ function Three() {
             const response = await fetch(api_query);
             const json = await response.json();
             planete[index].api_json = json;
-            planete[index].radius = planete[index].api_json[0].radius * 200;
+            planete[index].radius = planete[index].api_json[0].radius * 15;
         }
     }
 
@@ -226,15 +226,15 @@ function Three() {
 
                         // foloseste forta bruta pentru a genera dinamic scala corecta
                         // si pentru a pune planeta pe orbita sa
-                        var acuratete = 0.9999999;
+                        var acuratete = 1.01;
                         while (ecuatia_elipsei(planeta_obiect.r1, planeta_obiect.r2, planeta_obiect.x, planeta_obiect.y, x, y) < acuratete) {
-                            planete[index].render_scale += 5;
+                            planete[index].render_scale += 10;
                             x = json_packet.x * planete[index].render_scale;
                             y = json_packet.y * planete[index].render_scale;
                         }
 
                         while (ecuatia_elipsei(planeta_obiect.r1, planeta_obiect.r2, planeta_obiect.x, planeta_obiect.y, x, y) > acuratete) {
-                            planete[index].render_scale -= 0.01;
+                            planete[index].render_scale -= 0.001;
                             x = json_packet.x * planete[index].render_scale;
                             y = json_packet.y * planete[index].render_scale;
                         }
