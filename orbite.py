@@ -45,5 +45,6 @@ for planeta in planete:
     print(f"radius: 100,")
     print("api_json: {},")
     print(f"api_command: {int(s[7])},")
+    print("render_scale: 0,")
     print(f"texture: \"images/{s[0].lower()}.jpg\",")
     print("},")

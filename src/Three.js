@@ -17,6 +17,7 @@ function Three() {
             radius: 100,
             api_json: {},
             api_command: 199,
+            render_scale: 0,
             texture: "images/mercury.jpg",
         },
         {
@@ -29,6 +30,7 @@ function Three() {
             radius: 100,
             api_json: {},
             api_command: 299,
+            render_scale: 0,
             texture: "images/venus.jpg",
         },
         {
@@ -41,6 +43,7 @@ function Three() {
             radius: 100,
             api_json: {},
             api_command: 399,
+            render_scale: 0,
             texture: "images/earth.jpg",
         },
         {
@@ -53,6 +56,7 @@ function Three() {
             radius: 100,
             api_json: {},
             api_command: 499,
+            render_scale: 0,
             texture: "images/mars.jpg",
         },
         {
@@ -65,6 +69,7 @@ function Three() {
             radius: 100,
             api_json: {},
             api_command: 599,
+            render_scale: 0,
             texture: "images/jupiter.jpg",
         },
         {
@@ -77,6 +82,7 @@ function Three() {
             radius: 100,
             api_json: {},
             api_command: 699,
+            render_scale: 0,
             texture: "images/saturn.jpg",
         },
         {
@@ -89,6 +95,7 @@ function Three() {
             radius: 100,
             api_json: {},
             api_command: 799,
+            render_scale: 0,
             texture: "images/uranus.jpg",
         },
         {
@@ -101,6 +108,7 @@ function Three() {
             radius: 100,
             api_json: {},
             api_command: 899,
+            render_scale: 0,
             texture: "images/neptune.jpg",
         },
     ]
@@ -113,7 +121,7 @@ function Three() {
             const response = await fetch(api_query);
             const json = await response.json();
             planete[index].api_json = json;
-            planete[index].radius = planete[index].api_json[0].radius * 150;
+            planete[index].radius = planete[index].api_json[0].radius * 200;
         }
     }
 
@@ -121,7 +129,7 @@ function Three() {
         update_json_api().then(() => {
             if (!rendererRef.current) {
                 const scene = new THREE.Scene();
-                const camera = new THREE.PerspectiveCamera(60, window.innerWidth / window.innerHeight, 0.0000000001, 500000000000);
+                const camera = new THREE.PerspectiveCamera(60, window.innerWidth / window.innerHeight, 0.0000000000001, 500000000000000);
                 const renderer = new THREE.WebGLRenderer();
                 renderer.setSize(window.innerWidth, window.innerHeight, false);
                 refContainer.current && refContainer.current.appendChild(renderer.domElement);
@@ -142,7 +150,7 @@ function Three() {
                 scene.add(sunlight);
 
                 const sunTexture = texture.load('images/sun.jpg')
-                const sunGeometry = new THREE.SphereGeometry(695700, 32, 32);
+                const sunGeometry = new THREE.SphereGeometry(695700 * 4, 32, 32);
                 const sunMaterial = new THREE.MeshBasicMaterial({ color: 0xfff000, map: sunTexture });
                 const sun = new THREE.Mesh(sunGeometry, sunMaterial);
                 scene.add(sun);
@@ -161,10 +169,20 @@ function Three() {
                     const curve = new THREE.EllipseCurve(x, y, r1, r2, 0, 2 * Math.PI, false, -rot);
                     const points = curve.getPoints(segments);
                     const orbitGeometry = new THREE.BufferGeometry().setFromPoints(points);
-                    const orbitMaterial = new THREE.LineBasicMaterial({ color: 0xffffff });
+                    const orbitMaterial = new THREE.LineBasicMaterial({ color: 0xffffff, transparent: true, opacity: 0.5 });
                     const orbit = new THREE.Line(orbitGeometry, orbitMaterial);
                     orbit.rotation.x = Math.PI / 2;
                     return orbit;
+                }
+
+                function ecuatia_elipsei(r1, r2, ox, oy, px, py) {
+                    // https://www.geeksforgeeks.org/check-if-a-point-is-inside-outside-or-on-the-ellipse/
+                    return (Math.pow(px - ox, 2) / Math.pow(r1, 2)) +
+                        (Math.pow(py - oy, 2) / Math.pow(r2, 2));
+
+                    // <1 => px, py -> in elipsa
+                    // ===1 => px, py -> pe elipsa
+                    // >1 => in afara elipsei 
                 }
 
                 let objplanete = [];
@@ -194,22 +212,43 @@ function Three() {
                     const stars = new THREE.Points(starGeometry, starMaterial);
                     scene.add(stars);
                 }
-                createStars();
+                //createStars();
 
                 function animate() {
-                    requestAnimationFrame(animate);
                     const date = new Date();
-                    const time = date.getSeconds() * 60;
+                    const time = date.getSeconds() + date.getMinutes();
 
                     objplanete.forEach((planeta, index) => {
-                        var x = planete[index].api_json[time].x * 1030;
-                        var y = planete[index].api_json[time].y * 1030;
+                        var planeta_obiect = planete[index];
+                        var json_packet = planete[index].api_json[time];
+                        var x = json_packet.x * planeta_obiect.render_scale;
+                        var y = json_packet.y * planeta_obiect.render_scale;
+
+                        // foloseste forta bruta pentru a genera dinamic scala corecta
+                        // si pentru a pune planeta pe orbita sa
+                        var acuratete = 0.9999999;
+                        while (ecuatia_elipsei(planeta_obiect.r1, planeta_obiect.r2, planeta_obiect.x, planeta_obiect.y, x, y) < acuratete) {
+                            planete[index].render_scale += 5;
+                            x = json_packet.x * planete[index].render_scale;
+                            y = json_packet.y * planete[index].render_scale;
+                        }
+
+                        while (ecuatia_elipsei(planeta_obiect.r1, planeta_obiect.r2, planeta_obiect.x, planeta_obiect.y, x, y) > acuratete) {
+                            planete[index].render_scale -= 0.01;
+                            x = json_packet.x * planete[index].render_scale;
+                            y = json_packet.y * planete[index].render_scale;
+                        }
+
+                        if(index == 0)
+                            console.log(`${x} ${y}`);
                         planeta.position.set(x, 0, y);
+                        planeta.rotation.y += 0.001;
                     })
 
                     sun.rotation.y += 0.001;
                     controls.update();
                     renderer.render(scene, camera);
+                    requestAnimationFrame(animate);
                 }
                 animate();
             }
