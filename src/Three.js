@@ -294,7 +294,7 @@ function Three() {
     }, []);
 
     return (<div>
-        <input type='number' max={7} onChange={(event) => lookAt(event.target.value)} />
+        <input type='number' max={8} min={1} onChange={(event) => lookAt(event.target.value - 1)} />
         <div className='z-0' ref={refContainer}></div>
     </div>
     );
