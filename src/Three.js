@@ -115,12 +115,11 @@ function Three() {
 
     async function update_json_api() {
         const api_gateway = "http://localhost:3000/";
+        const response = await fetch(api_gateway);
+        const json = await response.json();
 
         for (var index = 0; index < planete.length; index++) {
-            const api_query = `${api_gateway}${planete[index].api_command}`;
-            const response = await fetch(api_query);
-            const json = await response.json();
-            planete[index].api_json = json;
+            planete[index].api_json = json[index];
             planete[index].radius = planete[index].api_json[0].radius * 15;
         }
     }
