@@ -124,6 +124,7 @@ function Three() {
         }
     }
 
+
     useEffect(() => {
         update_json_api().then(() => {
             if (!rendererRef.current) {
@@ -213,6 +214,13 @@ function Three() {
                 }
                 createStars();
 
+                window.addEventListener('resize', onWindowResize, false)
+                function onWindowResize() {
+                    camera.aspect = window.innerWidth / window.innerHeight
+                    camera.updateProjectionMatrix()
+                    renderer.setSize(window.innerWidth, window.innerHeight)
+                }
+
                 function animate() {
                     const date = new Date();
                     const time = date.getSeconds() + date.getMinutes();
@@ -238,7 +246,7 @@ function Three() {
                             y = json_packet.y * planete[index].render_scale;
                         }
 
-                        if(index == 0)
+                        if (index == 0)
                             console.log(`${x} ${y}`);
                         planeta.position.set(x, 0, y);
                         planeta.rotation.y += 0.001;
