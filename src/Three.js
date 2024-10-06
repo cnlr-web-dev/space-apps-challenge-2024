@@ -118,7 +118,7 @@ function Three() {
     let objplanete = [];
 
     async function update_json_api() {
-        const api_gateway = "http://localhost:3000/";
+        const api_gateway = "http://89.137.132.40:3000/";
         const response = await fetch(api_gateway);
         const json = await response.json();
 
