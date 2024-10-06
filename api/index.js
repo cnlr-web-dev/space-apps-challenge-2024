@@ -11,8 +11,8 @@ app.use(cors());
 const api_gateway = "https://ssd.jpl.nasa.gov/api/horizons.api?format=text";
 function genereaza_query(comanda, data)
 {
-    ora_start = `${data.getFullYear()}-${data.getMonth()+1}-${data.getDate()} ${data.getHours()}:${data.getMinutes()}`
-    ora_end = `${data.getFullYear()}-${data.getMonth()+1}-${data.getDate()} ${data.getHours()+1}:${data.getMinutes()}`
+    ora_start = `${data.getFullYear()}-${data.getMonth()+1}-${data.getDate()} ${data.getHours()}:00`
+    ora_end = `${data.getFullYear()}-${data.getMonth()+1}-${data.getDate()} ${data.getHours()+1}:00`
     return `${api_gateway}&COMMAND='${comanda}'&STEP_SIZE='3600'&START_TIME='${ora_start}'&STOP_TIME='${ora_end}'&QUANTITIES='6'&CENTER='geo@0'`;
 }
 
@@ -43,19 +43,15 @@ app.get('/*', (req, res) => {
             text = Buffer.concat(data).toString();
 
             // preia raza
-            const regex = /Vol. [Mm]ean [Rr]adius \(km\) *= *([\d\+-]+)/;
+            const regex = /Vol\. [Mm]ean [Rr]adius \(km\) *= *([\d]+)(?=[.+-]|$)/;
             const match = text.match(regex);
-            if(match)
+            if(!match)
             {
-                raza = match[0];
-                raza = raza.replace(/\s/g, "").replace("+", "").replace("-", ""); // sterge +- si spatiul liber
-                raza = raza.replace(/.([^.]*)$/, '$1'); // sterge ultimul punct (uneori e fantoma la +-<toleranta>)
-                raza = raza.substring(18, 100000);
+                res.send([]);
+                return;
             }
-            else
-            {
-                raza = 1000;
-            }
+            raza = match[1];
+
             // preia tabelul
             tabel = ia_intre(text, "$$SOE", "$$EOE");
 
